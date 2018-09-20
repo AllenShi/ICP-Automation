@@ -59,6 +59,7 @@ systemctl enable docker
 docker login -u $ARTIFACTORY_USER_ID -p $ARTIFACTORY_API_KEY $ARTIFACTORY_SERVER
 docker pull $ARTIFACTORY_SERVER/ibmcom-amd64/$ICPIMAGENAME:$ICPVERSION
 
+echo "#### Docker login and pull $ICPIMAGENAME:$ICPVERSION ####"
 docker images | grep "$ICPIMAGENAME" | grep "$ICPVERSION"
 if [ $? != 0  ];then
 	echo "The ICp docker image is not present. Plese pull it via the following command: "
@@ -178,16 +179,17 @@ echo -e ansible_become_password: $INSTALLUSERPWD >> config.yaml
 echo -e ansible_ssh_pass: $INSTALLUSERPWD >> config.yaml
 # echo -e calico_ipip_enabled: true >> config.yaml
 echo -e version: 3.1.0 >> config.yaml
-echo -e image_repo: $ARTIFACTORY_SERVER//ibmcom-amd64 >> config.yaml
+echo -e image_repo: $ARTIFACTORY_SERVER/ibmcom-amd64 >> config.yaml
 echo -e private_registry_enabled: true >> config.yaml
 echo -e private_registry_server: $ARTIFACTORY_SERVER >> config.yaml
-echo -e docker_username: $ ARTIFACTORY_USER_ID >> config.yaml
+echo -e docker_username: $ARTIFACTORY_USER_ID >> config.yaml
 echo -e docker_password: $ARTIFACTORY_API_KEY >> config.yaml
 
 echo "#### Starting ICP installation: ####"
 cd /opt/ibm-cloud-private-$ICPVERSION/cluster
 docker run --net=host -t -e LICENSE=accept -v $(pwd):/installer/cluster $ARTIFACTORY_SERVER/ibmcom-amd64/$ICPIMAGENAME:$ICPVERSION install -vvv | tee install_$ICPVERSION.log 2>&1
 
+echo "#### cloudctl login to ICp : ####"
 cloudctl login -u admin -p admin -a https://$accessip:8443 --skip-ssl-validation << EOF
 1
 2
