@@ -92,6 +92,7 @@ echo "fi" >> $SETSUDOERSSCRIPTPATH
 
 chmod +x $SETSUDOERSSCRIPTPATH
 
+ln -s /usr/bin/python3 /usr/bin/python
 
 #Get HostnameBase
 WORKERIPS=''
