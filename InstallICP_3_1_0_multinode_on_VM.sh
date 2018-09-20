@@ -185,7 +185,7 @@ echo -e docker_password: $ARTIFACTORY_API_KEY >> config.yaml
 
 echo "#### Starting ICP installation: ####"
 cd /opt/ibm-cloud-private-$ICPVERSION/cluster
-docker run --net=host -t -e LICENSE=accept -v $(pwd):/installer/cluster $$ARTIFACTORY_SERVER/ibmcom-amd64/$ICPIMAGENAME:$ICPVERSION install -vvv | tee install_$ICPVERSION.log 2>&1
+docker run --net=host -t -e LICENSE=accept -v $(pwd):/installer/cluster $ARTIFACTORY_SERVER/ibmcom-amd64/$ICPIMAGENAME:$ICPVERSION install -vvv | tee install_$ICPVERSION.log 2>&1
 
 cloudctl login -u admin -p admin -a https://$accessip:8443 --skip-ssl-validation << EOF
 1
