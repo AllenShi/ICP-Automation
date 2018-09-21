@@ -55,11 +55,10 @@ systemctl enable docker
 
 
 # install ICP
-
+echo "#### Docker login and pull $ICPIMAGENAME:$ICPVERSION ####"
 docker login -u $ARTIFACTORY_USER_ID -p $ARTIFACTORY_API_KEY $ARTIFACTORY_SERVER
 docker pull $ARTIFACTORY_SERVER/ibmcom-amd64/$ICPIMAGENAME:$ICPVERSION
 
-echo "#### Docker login and pull $ICPIMAGENAME:$ICPVERSION ####"
 docker images | grep "$ICPIMAGENAME" | grep "$ICPVERSION"
 if [ $? != 0  ];then
 	echo "The ICp docker image is not present. Plese pull it via the following command: "
@@ -100,7 +99,52 @@ WORKERIPS=''
 echo "#### Get WorkerIPs via Hostname convention  ####"
 rm -f $WORKERNODEIPTEMPFILE
 HOSTNAMEBASE=$(hostname | awk -F . '{print $1}'); HOSTNAMEBASE=${HOSTNAMEBASE: : -1};echo "HostnameBase: "$HOSTNAMEBASE
-for i in {2..10}; do
+
+if [[ $HOSTNAMEBASE = *"-master-"* ]]; then 
+  HOSTNAMEBASE=$(echo $HOSTNAMEBASE | awk -F '-' '{print $1}') ;  
+  declare -a NODETYPE=("master" "worker" "storage") 
+  for n in "${NODETYPE[@]}"; do
+    if [[ $n = "master" ]]; then
+      for i in {2..10}; do
+        WORKERIPSTMP=$(nslookup $HOSTNAMEBASE-$n-$i|grep Address | grep -v '#'| awk '{print $2}')
+        if [ "$WORKERIPSTMP" != "" ]; then
+                echo $WORKERIPSTMP >> $WORKERNODEIPTEMPFILE
+				##Create ibm user on each Worker:
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "useradd -m -s /bin/bash $INSTALLUSER"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "chown $INSTALLUSER: /home/$INSTALLUSER"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "echo $INSTALLUSER:$INSTALLUSERPWD | chpasswd"
+				#ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "echo '$INSTALLUSER     ALL=(ALL)       ALL' >> /etc/sudoers"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "mkdir -p /home/$INSTALLUSER/.ssh"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "touch /home/$INSTALLUSER/.ssh/authorized_keys; echo ${SSHPRIAVEKEY} >> /home/$INSTALLUSER/.ssh/authorized_keys"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP < $SETSUDOERSSCRIPTPATH
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "ln -s /usr/bin/python3 /usr/bin/python"
+                                
+				
+        fi
+      done
+    else 
+      for i in {1..10}; do
+        WORKERIPSTMP=$(nslookup $HOSTNAMEBASE-$n-$i|grep Address | grep -v '#'| awk '{print $2}')
+        if [ "$WORKERIPSTMP" != "" ]; then
+                echo $WORKERIPSTMP >> $WORKERNODEIPTEMPFILE
+				##Create ibm user on each Worker:
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "useradd -m -s /bin/bash $INSTALLUSER"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "chown $INSTALLUSER: /home/$INSTALLUSER"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "echo $INSTALLUSER:$INSTALLUSERPWD | chpasswd"
+				#ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "echo '$INSTALLUSER     ALL=(ALL)       ALL' >> /etc/sudoers"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "mkdir -p /home/$INSTALLUSER/.ssh"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "touch /home/$INSTALLUSER/.ssh/authorized_keys; echo ${SSHPRIAVEKEY} >> /home/$INSTALLUSER/.ssh/authorized_keys"
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP < $SETSUDOERSSCRIPTPATH
+				ssh -o StrictHostKeyChecking=no $WORKERIPSTMP "ln -s /usr/bin/python3 /usr/bin/python"
+                                
+				
+        fi
+      done
+    fi
+  done
+
+else
+  for i in {2..10}; do
         #nslookup $HOSTNAMEBASE$i|grep Address | grep -v '#'| awk '{print $2}' > /tmp/WorkerIPS
         WORKERIPSTMP=$(nslookup $HOSTNAMEBASE$i|grep Address | grep -v '#'| awk '{print $2}')
         if [ "$WORKERIPSTMP" != "" ]; then
