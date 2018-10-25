@@ -7,4 +7,4 @@
 
 ./create_bai_pvcs.sh -s glusterfs-dev -n dbamc-icp-space
 
-./set_gluster_vol_owership.sh
+./set_glusterfs_vol_owership.sh
