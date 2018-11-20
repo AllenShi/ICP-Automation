@@ -34,5 +34,5 @@ sudo dpkg-reconfigure locales
 apt install python-pip
 apt install libssl-dev
 pip install paramiko
-python create_fyre_cluster.py --user=<your fyre account> --key=<your fyre api key> --cluster=<your cluster name> --icp-base --os-name=Ubuntu --os-version=18.04 --9-nodes 
+python create_VM_cluster_sample.py --user=<your fyre account> --key=<your fyre api key> --cluster=<your cluster name> --icp-base --os-name=Ubuntu --os-version=18.04 --9-nodes 
 ~~~
